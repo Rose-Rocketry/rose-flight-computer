@@ -2,7 +2,6 @@
 #include <BMP280_DEV.h>
 #include <SPIFlash.h>
 #include <lsm6dso32.h>
-// #include <Adafruit_LSM6DSO32.h> // I hate adafruit
 
 #define P_SDA   PB7
 #define P_SCL   PB6
@@ -14,13 +13,6 @@
 
 #define INT_IMU digitalPinToInterrupt(PA3)
 #define INT_HIG digitalPinToInterrupt(PB2)
-
-// typedef struct {
-//   unsigned long micros;
-//   float ax, ay, az;
-//   float gx, gy, gz;
-//   float temp;
-// } IMUPacket;
 
 TwoWire i2c;
 SPIClass spi;
@@ -78,15 +70,7 @@ void setup() {
   // // flashCap = flash.getCapacity();
   // // Serial.printf("Flash with capacity 0x%x\n", flashCap);
   // // flash.eraseChip();
-  // if(!imu.begin_I2C()) {
-  //   digitalWrite(PC13, LOW);
-  //   while(1);
-  // }
-  // imu.configInt1(false, true, false); // interrupt on new gyroscope data
 }
-
-// IMUPacket currentPacket;
-// IMUPacket lastPacket;
 
 // unsigned long pageaddr = 0;
 void loop() {
@@ -99,20 +83,6 @@ void loop() {
   Serial.printf("Time %i\t Sensor %i\t", micros()/1000000, (lsm.getTimestamp()*LSM_MICROS + timecal)/1000000);
   Serial.printf("Time skew %i us (offset %i us)\n", micros() - timecal - lsm.getTimestamp()*LSM_MICROS, timecal);
   delay(10);
-//   i2c.requestFrom(LSM_I2C_LO, 1, LSM_WHO_AM_I, 1, 1);
-//   while(i2c.available() < 1) {
-//     Serial.println("waiting...");
-//   };
-//   int whoami = i2c.read();
-//   Serial.printf("%i\n", whoami);
-//   delay(1000);
-  // sensors_event_t is dumb
-  // if(packetReady) {
-  //   lastPacket = currentPacket;
-  //   readIMU(currentPacket, incomingPacketTime);
-  //   Serial.printf("Gyro packet a=(%f, %f, %f) g=(%f, %F, %F) dt=%lius\n", currentPacket.ax, currentPacket.ay, currentPacket.az, currentPacket.gx, currentPacket.gy, currentPacket.gz, currentPacket.micros-lastPacket.micros);
-  //   packetReady = false;
-  // }
   
   // float temp, pres, alt;
   // baro.getCurrentMeasurements(temp, pres, alt);
@@ -141,6 +111,4 @@ void loop() {
   // }
   // Serial.printf("Successfully read/wrote page at 0x%x of 0x%x\n", pageaddr, flashCap);
   // pageaddr += 256;
-
-
 }
