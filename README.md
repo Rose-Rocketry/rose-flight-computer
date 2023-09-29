@@ -7,7 +7,7 @@ This is the repository for the Rose Flight Computer's flight source code.
 This project is intended to be uploaded to STM32 boards via SWD. Currently two
 debugger devices have been tested: clone STLink debuggers and FreeDAP via RasPi
 Pico. There is unfortunately no way to exempt individual parameters from the
-configuration file from version control(that I know of) so you'll probably need
+configuration file from version control (that I know of) so you'll probably need
 to change `platformio.ini` for your particular setup:
 * For STLink (genuine or clones), use the following lines:
 ```
