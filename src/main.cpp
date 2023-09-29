@@ -26,6 +26,7 @@ enum class FlightState : uint8_t {
     LANDING
 };
 
+// This should be exactly 64 bytes
 struct __attribute__((packed)) DataPacket {
     // Measured values
     uint16_t deltaTime;
