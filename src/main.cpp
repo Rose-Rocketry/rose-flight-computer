@@ -11,14 +11,19 @@
 
 #define PACKET_SIZE 64
 #define SAMPLE_RATE 500
+// TODO: variable sample rate?
+// If we record at maximum rate all the time we run out of flash very quickly
 
 TwoWire i2c(P_SDA, P_SCL);
 SPIClass spi(P_MISO, P_MOSI, P_SCK);
 
 enum class FlightState : uint8_t {
+    ERROR,
     READY,
     BOOST,
-    
+    COAST,
+    DESCENT,
+    LANDING
 };
 
 struct __attribute__((packed)) DataPacket {
@@ -46,7 +51,7 @@ float tempReading; // deg C
 VectorF accelReading; // m/s^2
 float altReading; // m
 VectorF gyroReading; // rad/s
-FlightState state;
+FlightState state = FlightState::ERROR;
 
 VectorF vel;
 QuatF orientation;
@@ -74,14 +79,29 @@ bool baroWaiting = false;
 void isr_imu() { imuWaiting = true; }
 void isr_hig() { higWaiting = true; }
 
+// MAIN PROGRAM
+
 void setup() {
     i2c.begin();
     spi.begin();
 
     attachInterrupt(INT_IMU, isr_imu, RISING);
     attachInterrupt(INT_HIG, isr_hig, RISING);
+    // TODO: interrupt for baro (the BMP280 doesn't have one so waiting for
+    //       BMP390 or using MPL3115)
 }
 
 void loop() {
-
+    // TODO: better scheduling?
+    // Right now a fast enough IMU with a slow enough CPU can in theory stall
+    // the loop forever and never allow it to record a packet
+    if(imuWaiting) {
+        // TODO: Read IMU data
+    } else if(higWaiting) {
+        // TODO: Read high-G data
+    } else if(baroWaiting) {
+        // TODO: Read baro data
+    } else if(micros()-lastPacketTime > uint32_t(1e6 / SAMPLE_RATE)) {
+        // TODO: Log data to flash
+    }
 }
