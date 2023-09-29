@@ -25,7 +25,7 @@ struct __attribute__((packed)) DataPacket {
     // Measured values
     uint16_t deltaTime;
     uint8_t battVoltage;
-    uint8_t temp;
+    uint8_t temp; // reported in 5ths of a degree C
     VectorF accel;
     float altitude;
     VectorF gyro;
@@ -40,9 +40,46 @@ static_assert(sizeof(DataPacket) <= PACKET_SIZE, "DataPacket is too large");
 static_assert(1e6/SAMPLE_RATE <= std::numeric_limits<uint16_t>::max(),
     "Target sample rate is too slow for delta-time compression");
 
+// Flight state variables
+uint32_t lastPacketTime; // us
+float tempReading; // deg C
+VectorF accelReading; // m/s^2
+float altReading; // m
+VectorF gyroReading; // rad/s
+FlightState state;
+
+VectorF vel;
+QuatF orientation;
+
+DataPacket recordState() {
+    uint32_t time = micros();
+    DataPacket d;
+    d.deltaTime = uint16_t(time - lastPacketTime);
+    d.battVoltage = 0;
+    d.temp = uint8_t(tempReading/5.0);
+    d.accel = accelReading;
+    d.altitude = altReading;
+    d.gyro = gyroReading;
+    d.state = state;
+    d.vel = vel;
+    d.orientation = orientation;
+    lastPacketTime = time;
+    return d;
+}
+
+bool imuWaiting = false;
+bool higWaiting = false;
+bool baroWaiting = false;
+
+void isr_imu() { imuWaiting = true; }
+void isr_hig() { higWaiting = true; }
+
 void setup() {
     i2c.begin();
     spi.begin();
+
+    attachInterrupt(INT_IMU, isr_imu, RISING);
+    attachInterrupt(INT_HIG, isr_hig, RISING);
 }
 
 void loop() {
