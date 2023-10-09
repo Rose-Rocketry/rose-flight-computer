@@ -8,60 +8,13 @@
 #include <lsm6dso32.h>
 
 #include "pindefs.h"
-
-#define PACKET_SIZE 64
-#define SAMPLE_RATE 20
-// TODO: variable sample rate?
-// If we record at maximum rate all the time we run out of flash very quickly
+#include "logging.h"
+#include "flightcontrol.h"
 
 TwoWire i2c(P_SDA, P_SCL);
 SPIClass spi(P_MISO, P_MOSI, P_SCK);
 
 LSM6DSO32 imu;
-
-enum class FlightState : uint8_t {
-    ERROR,
-    READY,
-    BOOST,
-    COAST,
-    DESCENT,
-    LANDING
-};
-
-// This should be exactly 64 bytes
-struct __attribute__((packed)) DataPacket {
-    // Measured values
-    uint16_t deltaTime;
-    uint8_t battVoltage;
-    uint8_t temp; // reported in 5ths of a degree C
-    VectorF accel;
-    float altitude;
-    VectorF gyro;
-    // Calculated values
-    FlightState state;
-    uint8_t placeholder_controllaw;
-    uint16_t placeholder_pyrostate;
-    VectorF vel;
-    QuatF orientation;
-};
-static_assert(sizeof(DataPacket) <= PACKET_SIZE, "DataPacket is too large");
-static_assert(1e6/SAMPLE_RATE <= std::numeric_limits<uint16_t>::max(),
-    "Target sample rate is too slow for delta-time compression");
-
-// Flight state variables
-uint32_t lastPacketTime; // us
-float tempReading; // deg C
-
-uint32_t currentIMUTime;
-VectorF accelReading; // m/s^2
-VectorF gyroReading; // rad/s
-
-float altReading; // m
-FlightState state = FlightState::ERROR;
-
-VectorF vel(0, 0, 0);
-VectorF grav(0, 0, 0);
-QuatF orientation(1, 0, 0, 0);
 
 volatile bool imuWaiting = false;
 volatile bool higWaiting = false;
@@ -96,22 +49,6 @@ void readBaro() {
 
 void advanceState() {
     // TODO
-}
-
-DataPacket recordState() {
-    uint32_t time = micros();
-    DataPacket d;
-    d.deltaTime = uint16_t(time - lastPacketTime);
-    d.battVoltage = 0;
-    d.temp = uint8_t(tempReading/5.0);
-    d.accel = accelReading;
-    d.altitude = altReading;
-    d.gyro = gyroReading;
-    d.state = state;
-    d.vel = vel;
-    d.orientation = orientation;
-    lastPacketTime = time;
-    return d;
 }
 
 void logToFlash() {
