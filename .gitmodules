@@ -1,3 +1,6 @@
 [submodule "lib/lsm6dso32"]
 	path = lib/lsm6dso32
 	url = git@github.com:Rose-Rocketry/lsm6dso32.git
+[submodule "lib/SPIMemory"]
+	path = lib/SPIMemory
+	url = git@github.com:Rose-Rocketry/SPIMemory.git
