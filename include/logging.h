@@ -13,7 +13,7 @@
 // TODO: variable sample rate?
 // If we record at maximum rate all the time we run out of flash very quickly
 
-// This should be exactly 64 bytes
+// This should be exactly 128 bytes
 struct __attribute__((packed)) DataPacket {
     // Measured values
     uint32_t time;
@@ -25,7 +25,7 @@ struct __attribute__((packed)) DataPacket {
     uint8_t battVoltage;
     uint8_t temp; // reported in 5ths of a degree C
     uint8_t pyroCont;
-    uint8_t placehonder;
+    uint8_t placeholder;
     VectorF gyro;
 
     uint8_t placeholder_sensors[16];
@@ -42,9 +42,10 @@ struct __attribute__((packed)) DataPacket {
 };
 
 struct __attribute__((packed)) DataHeader {
-    uint16_t startSector;
+    uint32_t startSector;
 };
 
-DataPacket recordState();
+void startLogging();
+void log();
 
 #endif

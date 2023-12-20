@@ -10,6 +10,8 @@
 #include "pindefs.h"
 #include "logging.h"
 #include "flightcontrol.h"
+#include "logging.h"
+#include "static_queue.h"
 
 TwoWire i2c(P_SDA, P_SCL);
 SPIClass spi(P_MISO, P_MOSI, P_SCK);
@@ -51,22 +53,14 @@ void advanceState() {
     // TODO
 }
 
-void logToFlash() {
-    DataPacket dp = recordState();
-
-    VectorF vec = dp.accel.rotate(~dp.orientation);
-    Serial.printf("<%f, %f, %f, %f> <%f, %f, %f>\n",
-            dp.orientation.w, dp.orientation.x,
-            dp.orientation.y, dp.orientation.z,
-            dp.vel.x, dp.vel.y, dp.vel.z);
-    // TODO: actual logging
-}
-
 // MAIN PROGRAM
+
+SPIFlash flash(P_CS_FLASH, &spi);
+
+#define SPI_SPEED 48000000
 
 void setup() {
     i2c.begin();
-    spi.begin();
 
     attachInterrupt(INT_IMU, isr_imu, RISING);
     attachInterrupt(INT_HIG, isr_hig, RISING);
@@ -75,6 +69,14 @@ void setup() {
 
     Serial.begin(4000000);
     while(!Serial);
+    
+    spi.begin();
+    while(!flash.begin()) {
+        Serial.println("Flash failed to initialize\n");
+        delay(1000);
+    }
+
+    Serial.printf("%lu us\n", dt);
 
     while(!imu.begin(&i2c, LSM_I2C_LO)) {
         Serial.println("IMU init failed!\n");
@@ -105,6 +107,6 @@ void loop() {
         readBaro();
     } else if(micros()-lastPacketTime > uint32_t(1e6 / SAMPLE_RATE)) {
         advanceState();
-        logToFlash();
+        log();
     }
 }
