@@ -22,12 +22,19 @@ volatile bool imuWaiting = false;
 volatile bool higWaiting = false;
 volatile bool baroWaiting = false;
 
-void isr_imu() { imuWaiting = true; currentIMUTime = micros(); }
+volatile static_queue<uint32_t, 256> imuTimes;
+void isr_imu() {
+    imuTimes.push(micros());
+}
+
 void isr_hig() { higWaiting = true; }
 
+uint32_t lastIMUTime;
 void readIMU() {
-    static uint32_t lastIMUTime = micros();
+    uint32_t currentIMUTime;
+    imuTimes.pop(&currentIMUTime);
 
+    // TODO: read from FIFO
     accelReading = imu.getAccel();
     gyroReading = imu.getGyro();
 
@@ -57,8 +64,6 @@ void advanceState() {
 
 SPIFlash flash(P_CS_FLASH, &spi);
 
-#define SPI_SPEED 48000000
-
 void setup() {
     i2c.begin();
 
@@ -75,8 +80,6 @@ void setup() {
         Serial.println("Flash failed to initialize\n");
         delay(1000);
     }
-
-    Serial.printf("%lu us\n", dt);
 
     while(!imu.begin(&i2c, LSM_I2C_LO)) {
         Serial.println("IMU init failed!\n");
