@@ -71,6 +71,7 @@ void setup() {
     attachInterrupt(INT_HIG, isr_hig, RISING);
     // TODO: interrupt for baro (the BMP280 doesn't have one so waiting for
     //       BMP390 or using MPL3115)
+    // or maybe just live without it
 
     Serial.begin(4000000);
     while(!Serial);
